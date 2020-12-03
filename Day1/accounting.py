@@ -35,7 +35,7 @@ if __name__ == "__main__":
     # Part 1
     x, y = find_pair(input_file, sum)
     if x and y:
-        print(f"{x} and {y} multiply to give {x*y}"")
+        print(f"{x} and {y} multiply to give {x*y}")
     else:
         print(f"No pair of values sums to {sum}")
 
