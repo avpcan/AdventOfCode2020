@@ -1,17 +1,7 @@
-from dataclasses import dataclass
 from math import floor, ceil
 
 
-@dataclass()
-class BoardingPass:
-    """Class for holding the information on a plane ticket."""
-
-    row_num: int
-    col_num: int
-    seat_id: int
-
-
-def apply_partitioning(code, max_val):
+def traverse_partition(code, max_val):
     # Example code = "1000110" max_val = 127
     lower_bound = 0
     upper_bound = max_val
@@ -34,39 +24,58 @@ def decode_row(row_code):
     row_code = row_code.replace("F", "0")
     row_code = row_code.replace("B", "1")
 
-    return apply_partitioning(row_code, 127)
+    return traverse_partition(row_code, 127)
 
 
 def decode_column(column_code):
     column_code = column_code.replace("L", "0")
     column_code = column_code.replace("R", "1")
 
-    return apply_partitioning(column_code, 7)
+    return traverse_partition(column_code, 7)
 
 
-def get_seat_id(row, column):
-    return row * 8 + column
-
-
-def parse_boarding_pass(boarding_pass):
+def get_seat_id(boarding_pass):
     row_code = boarding_pass[0:7]
     row_num = decode_row(row_code)
 
     column_code = boarding_pass[7:10]
     column_num = decode_column(column_code)
 
-    seat_id = get_seat_id(row_num, column_num)
-    return seat_id
-    # return BoardingPass(row_num, column_num, seat_id)
+    return row_num * 8 + column_num
 
 
-def parse_boarding_passes(boarding_passes_file):
+def get_all_seat_ids(boarding_passes_file):
     f = open(boarding_passes_file, "r")
-    boarding_passes = []
+    seat_ids = []
     for boarding_pass in f:
-        parsed_boarding_pass = parse_boarding_pass(boarding_pass)
-        boarding_passes.append(parsed_boarding_pass)
-    return boarding_passes
+        seat_id = get_seat_id(boarding_pass)
+        seat_ids.append(seat_id)
+    return seat_ids
+
+
+def find_missing_seat_id(seat_ids):
+    lowest_id = seat_ids[0]
+
+    lower_bound = seat_ids[0]  # 59
+    upper_bound = seat_ids[-1]  # 904
+
+    while True:
+        lower_middle = floor((upper_bound - lower_bound) / 2 + lower_bound)
+        upper_middle = ceil((upper_bound - lower_bound) / 2 + lower_bound)
+
+        if seat_ids[lower_middle] + 2 == seat_ids[upper_middle]:
+            # There's one seat missing in between! That's mine.
+            return seat_ids[lower_middle] + 1
+        if seat_ids[lower_middle] == lowest_id + lower_middle + 1:
+            # Take lower half
+            upper_bound = lower_middle
+        elif seat_ids[upper_middle] == lowest_id + upper_middle:
+            # Take upper half
+            lower_bound = upper_middle
+        else:
+            raise RuntimeError(
+                "Something went wrong while looking for the missing seat."
+            )
 
 
 if __name__ == "__main__":
@@ -75,26 +84,19 @@ if __name__ == "__main__":
 
     # Part 1. Find the highest seat id
     try:
-        boarding_passes = parse_boarding_passes(boarding_passes_file)
-        boarding_passes.sort()
-        print(boarding_passes)
+        seat_ids = get_all_seat_ids(boarding_passes_file)
     except ValueError:
         print("Internal Error.")
         raise SystemExit(0)
     except RuntimeError:
         print("Internal Error.")
         raise SystemExit(0)
-    highest_id = max(boarding_pass.seat_id for boarding_pass in boarding_passes)
+
+    # Using sort() instead of max() because we need the sorted ids for part 2
+    seat_ids.sort()
+    highest_id = seat_ids[-1]
     print(f"The highest seat id is {highest_id}.")
 
     # Part 2. Find your seat id (it's the missing value!)
-
-    # TODO (TEMPORARILY):
-    # reread and make sure I understood wtf is going on
-    # rename parse_boarding_passes to get_seat_id
-    # remove the class
-    # collect the seat_ids instead
-    # sort them.
-    # print to see it
-    # hmm, wonder if we could use some fancy tree structure thing to make searching faster?
-    # brute force is increment id[i] and compare with id[i+1]
+    my_seat_id = find_missing_seat_id(seat_ids)
+    print(f"My seat id must be {my_seat_id}.")
