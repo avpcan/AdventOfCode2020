@@ -1,8 +1,20 @@
 def count_yes_responses(input_file, joining_policy):
+    """Finds the sum of the count of the questions that people in each group said yes to
+
+    Args:
+        input_file (str): Name of the file containing the input
+        joining_policy (Callable): a set operation.
+            set.union determines the count for which ANYONE answered "yes".
+            set.intersection determines the count for which EVERYONE answered "yes".
+
+    Returns:
+        int: The sum of the count of the questions that people in each group said yes to
+    """
     f = open(input_file, "r")
     group_answers = set()
     running_total = 0
     is_first_member = True
+
     for line in f:
         if line == "\n":
             running_total += len(group_answers)
@@ -17,12 +29,10 @@ def count_yes_responses(input_file, joining_policy):
             is_first_member = False
         else:
             group_answers = joining_policy(group_answers, set(line))
+
     # Account for the last line
     running_total += len(group_answers)
     return running_total
-
-
-# def count_all_yes_responses(input_file):
 
 
 if __name__ == "__main__":
